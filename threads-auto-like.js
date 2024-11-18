@@ -20,67 +20,59 @@ async function smoothScroll(pixelsToScroll) {
     }
 }
 
-// Function to click all like buttons with lazy scrolling and random pauses
-async function clickAllLikeButtons() {
+// Function to perform lazy loading
+async function lazyLoad(times) {
+    for (let i = 0; i < times; i++) {
+        console.log(`Lazy loading... (${i + 1}/${times})`);
+        await smoothScroll(1000); // Scroll down 1000 pixels
+        await sleep(5000); // Wait 5 seconds for new content to load
+    }
+}
+
+// Function to like all buttons that are not already liked
+async function likeAllButtons() {
     let totalClicked = 0;
-    let lastScrollHeight = 0;
 
-    for (let iteration = 0; iteration < 1000; iteration++) {
-        console.log(`Starting iteration ${iteration + 1}`);
+    // Select all SVG elements with aria-label "Like"
+    const likeButtons = document.querySelectorAll('svg[aria-label="Like"]');
 
-        // Select all SVG elements with aria-label "Like"
-        const likeButtons = document.querySelectorAll('svg[aria-label="Like"]');
-        
-        for (const button of likeButtons) {
-            // Find the closest clickable parent div
-            const clickableParent = button.closest('div[role="button"]') || button.closest('div');
-            if (clickableParent && !clickableParent.dataset.clicked) {
-                // Scroll the button into view
-                clickableParent.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                await sleep(500); // Wait for scroll to complete
+    for (const button of likeButtons) {
+        // Find the closest clickable parent div
+        const clickableParent = button.closest('div[role="button"]') || button.closest('div');
+        if (clickableParent && !clickableParent.dataset.clicked) {
+            // Scroll the button into view
+            clickableParent.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            await sleep(1000); // Wait for scroll to complete
 
-                // Click the button if it's visible
-                if (clickableParent.getBoundingClientRect().top >= 0 && clickableParent.getBoundingClientRect().bottom <= window.innerHeight) {
-                    clickableParent.click();
-                    clickableParent.dataset.clicked = 'true';
-                    totalClicked++;
+            // Click the button if it's visible
+            if (clickableParent.getBoundingClientRect().top >= 0 && clickableParent.getBoundingClientRect().bottom <= window.innerHeight) {
+                clickableParent.click();
+                clickableParent.dataset.clicked = 'true';
+                totalClicked++;
 
-                    console.log(`Clicked ${totalClicked} like buttons.`);
+                console.log(`Clicked ${totalClicked} like buttons.`);
 
-                    // Random pause between 1 and 3 seconds
-                    await sleep(getRandomInt(1000, 3000));
-                }
-            }
-        }
-
-        // Scroll down smoothly
-        await smoothScroll(500);
-
-        // Wait for 20 seconds after scrolling
-        console.log("Waiting 20 seconds for new content to load...");
-        await sleep(20000);
-
-        // Check if new content has loaded
-        if (document.body.scrollHeight === lastScrollHeight) {
-            console.log("No new content loaded. Continuing to scroll...");
-        } else {
-            console.log("New content loaded.");
-        }
-        lastScrollHeight = document.body.scrollHeight;
-
-        // Check if we've reached the end of the page
-        if (window.innerHeight + window.scrollY >= document.body.offsetHeight) {
-            console.log("Reached end of page. Waiting for new content...");
-            await sleep(20000); // Wait additional 20 seconds at the bottom of the page
-            if (document.body.scrollHeight === lastScrollHeight) {
-                console.log("No new content loaded at the bottom. Ending script.");
-                break;
+                // Random pause between 0.5 and 3 seconds
+                await sleep(getRandomInt(500, 3000));
             }
         }
     }
 
-    console.log(`Completed. Total liked: ${totalClicked} buttons.`);
+    console.log(`Completed liking. Total clicked: ${totalClicked}`);
 }
 
-// Execute the function
-clickAllLikeButtons();
+// Main function to execute the lazy loading and liking process indefinitely
+async function clickAllLikeButtonsIndefinitely() {
+    while (true) {
+        console.log("Starting lazy loading...");
+        await lazyLoad(10); // Perform lazy loading 10 times
+
+        console.log("Starting to like buttons...");
+        await likeAllButtons(); // Like all the like buttons not already clicked
+
+        console.log("Cycle completed. Restarting the process...");
+    }
+}
+
+// Execute the infinite loop function
+clickAllLikeButtonsIndefinitely();
