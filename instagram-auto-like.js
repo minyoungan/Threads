@@ -1,114 +1,95 @@
-// Function to like comments with delay and error handling
-async function likeInstagramComments() {
-    // Helper function for random delay
-    const randomDelay = (min, max) => {
-        return new Promise(resolve => {
-            const delay = Math.floor(Math.random() * (max - min + 1)) + min;
-            setTimeout(resolve, delay);
-        });
-    };
-
-    // Find all like buttons that aren't already liked
-    const findLikeButtons = () => {
-        const buttons = document.querySelectorAll('span._a9zu div[role="button"]');
-        return Array.from(buttons).filter(button => {
-            const svg = button.querySelector('svg[aria-label="Like"]');
-            return svg && !button.classList.contains('liked');
-        });
-    };
-
-    // Main like process
-    async function processLikes() {
-        const likeButtons = findLikeButtons();
+async function likeAllPostComments() {
+    // Function to like comments in a post
+    async function likeCommentsInPost() {
+        const likeButtons = document.querySelectorAll('span._a9zu div[role="button"]');
         let likeCount = 0;
-        const maxLikes = 25; // Safety limit
         
-        console.log(`Found ${likeButtons.length} comments to like`);
-
         for (const button of likeButtons) {
             try {
-                // Check if we've reached the limit
-                if (likeCount >= maxLikes) {
-                    console.log('Reached maximum like limit');
-                    break;
+                await new Promise(resolve => setTimeout(resolve, Math.random() * 2000 + 1000));
+                
+                const svg = button.querySelector('svg[aria-label="Like"]');
+                if (svg) {
+                    button.click();
+                    likeCount++;
+                    console.log(`Liked comment ${likeCount} in current post`);
                 }
-
-                // Scroll button into view
-                button.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                
-                // Random delay between 2-5 seconds
-                await randomDelay(2000, 5000);
-
-                // Click the like button
-                button.click();
-                likeCount++;
-                
-                // Add visual feedback
-                button.classList.add('liked');
-                console.log(`Liked comment ${likeCount}`);
-
             } catch (error) {
                 console.error('Error liking comment:', error);
-                continue;
             }
         }
-
         return likeCount;
     }
 
-    // Add visual feedback styles
-    const addStyles = () => {
-        const style = document.createElement('style');
-        style.textContent = `
-            .liked svg {
-                color: #ed4956 !important;
-                fill: #ed4956 !important;
-            }
-            .like-counter {
-                position: fixed;
-                bottom: 20px;
-                right: 20px;
-                background: rgba(0, 0, 0, 0.8);
-                color: white;
-                padding: 10px;
-                border-radius: 5px;
-                z-index: 9999;
-            }
-        `;
-        document.head.appendChild(style);
-    };
+    // Get all posts
+    const posts = document.querySelectorAll('a[role="link"]');
+    console.log(`Found ${posts.length} posts`);
+    
+    let totalLikes = 0;
+    let processedPosts = 0;
 
-    // Add progress counter
-    const addCounter = () => {
-        const counter = document.createElement('div');
-        counter.className = 'like-counter';
-        counter.textContent = 'Starting...';
-        document.body.appendChild(counter);
-        return counter;
-    };
-
-    // Main execution
-    try {
-        addStyles();
-        const counter = addCounter();
-        
-        // Load more comments if available
-        const loadMoreButton = document.querySelector('button._abl-');
-        if (loadMoreButton) {
-            loadMoreButton.click();
-            await randomDelay(2000, 3000);
+    for (const post of posts) {
+        try {
+            // Click on post to open it
+            post.click();
+            console.log(`Opening post ${processedPosts + 1}/${posts.length}`);
+            
+            // Wait for modal to open
+            await new Promise(resolve => setTimeout(resolve, 3000));
+            
+            // Like comments
+            const likesInPost = await likeCommentsInPost();
+            totalLikes += likesInPost;
+            processedPosts++;
+            
+            console.log(`Processed post ${processedPosts}/${posts.length}. Liked ${likesInPost} comments`);
+            
+            // Close modal (find and click close button)
+            const closeButton = document.querySelector('svg[aria-label="Close"]').closest('button');
+            if (closeButton) closeButton.click();
+            
+            // Wait before next post
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+        } catch (error) {
+            console.error(`Error processing post ${processedPosts + 1}:`, error);
         }
-
-        const totalLiked = await processLikes();
-        counter.textContent = `Liked ${totalLiked} comments`;
-        
-        // Remove counter after 5 seconds
-        setTimeout(() => counter.remove(), 5000);
-
-    } catch (error) {
-        console.error('Main process error:', error);
     }
+
+    console.log(`Finished processing ${processedPosts} posts`);
+    console.log(`Total comments liked: ${totalLikes}`);
+}
+
+// Add progress indicator
+function addProgressIndicator() {
+    const indicator = document.createElement('div');
+    indicator.id = 'like-progress';
+    indicator.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: rgba(0,0,0,0.8);
+        color: white;
+        padding: 10px;
+        border-radius: 5px;
+        z-index: 9999;
+        font-family: Arial;
+    `;
+    document.body.appendChild(indicator);
+    return indicator;
 }
 
 // Run the script
-likeInstagramComments();
+(async function() {
+    const progress = addProgressIndicator();
+    progress.textContent = 'Starting...';
+    
+    try {
+        await likeAllPostComments();
+        progress.textContent = 'Completed!';
+        setTimeout(() => progress.remove(), 3000);
+    } catch (error) {
+        progress.textContent = 'Error: ' + error.message;
+        console.error('Script error:', error);
+    }
+})();
