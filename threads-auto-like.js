@@ -65,7 +65,7 @@ async function likeAllButtons() {
 async function clickAllLikeButtonsIndefinitely() {
     while (true) {
         console.log("Starting lazy loading...");
-        await lazyLoad(10); // Perform lazy loading 10 times
+        await lazyLoad(1); // Perform lazy loading 1 times
 
         console.log("Starting to like buttons...");
         await likeAllButtons(); // Like all the like buttons not already clicked
