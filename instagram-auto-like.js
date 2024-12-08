@@ -1,17 +1,15 @@
 async function likeAllPostComments() {
     // Function to like comments in a post
     async function likeCommentsInPost() {
-        const likeButtons = document.querySelectorAll('span._a9zu div[role="button"]');
+        const likeButtons = document.querySelectorAll('div.x6s0dn4 span > svg[aria-label="좋아요"]');
         let likeCount = 0;
-        
+
         // Process comments in reverse order
         for (let i = likeButtons.length - 1; i >= 0; i--) {
-            const button = likeButtons[i];
+            const button = likeButtons[i]?.closest('div[role="button"]');
             try {
-                await new Promise(resolve => setTimeout(resolve, Math.random() * 2000 + 1000));
-                
-                const svg = button.querySelector('svg[aria-label="Like"]');
-                if (svg) {
+                if (button) {
+                    await new Promise(resolve => setTimeout(resolve, Math.random() * 2000 + 1000));
                     button.click();
                     likeCount++;
                     console.log(`Liked comment ${likeCount} in current post`);
